@@ -1,4 +1,6 @@
 import java.io.*;
+import java.nio.Buffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -64,6 +66,26 @@ public class FileHelper
             writer.close();
         } catch (IOException e) {
             System.out.println("Failed opening/closing output file!");
+            e.printStackTrace();
+        }
+    }
+
+    public static void outputActivityFile(String filePath, ArrayList<UserActivity> activities, String project)
+    {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+            writer.write("Project,AuthorID,CommentCount,IssueCount" + System.lineSeparator()); //header
+
+            for (UserActivity curActivity : activities)
+            {
+                String output = project + "," + curActivity.getUserId() + "," + curActivity.getCommentCnt() + "," + curActivity.getIssueCnt();
+                output += System.lineSeparator();
+                writer.write(output);
+            }
+
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("Failed opening/close output file!");
             e.printStackTrace();
         }
     }

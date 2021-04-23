@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DBInterface {
     private Connection dbConn;
@@ -67,5 +68,66 @@ public class DBInterface {
         }
 
         return fixingTime;
+    }
+
+    public ArrayList<String> getAnalyzedProjects()
+    {
+        String query = "SELECT DISTINCT rprt.project\n" +
+                "FROM jira_issue_report rprt\n" +
+                "INNER JOIN jira_issue_comment cmnt ON cmnt.issue_report_id = rprt.id\n" +
+                "WHERE cmnt.politeness IS NOT NULL";
+        ArrayList<String> projList = new ArrayList<>();
+
+        try {
+            PreparedStatement select = dbConn.prepareStatement(query);
+            ResultSet results = select.executeQuery();
+
+
+            while (results.next())
+            {
+                projList.add(results.getString("project"));
+            }
+
+            select.close();
+            results.close();
+        } catch (SQLException throwables) {
+            System.out.println("getAnalyzedProjects statement failed!");
+            throwables.printStackTrace();
+        }
+
+        return projList;
+    }
+
+    public ArrayList<UserActivity> getUserActivity(String project)
+    {
+        String query = "SELECT cmnt.author_id, COUNT(cmnt.*) comment_count, COUNT(DISTINCT cmnt.issue_report_id) iss_count\n" +
+                "FROM  jira_issue_comment cmnt\n" +
+                "INNER JOIN jira_issue_report rprt ON rprt.id = cmnt.issue_report_id\n" +
+                "WHERE rprt.project = ?\n" +
+                "GROUP BY cmnt.author_id\n" +
+                "ORDER BY comment_count DESC";
+        ArrayList<UserActivity> userList = new ArrayList<>();
+
+        try {
+            PreparedStatement select = dbConn.prepareStatement(query);
+            select.setString(1, project);
+            ResultSet results = select.executeQuery();
+
+            while (results.next())
+            {
+                UserActivity curUser = new UserActivity(Integer.toString(results.getInt("author_id")),
+                        results.getInt("comment_count"),
+                        results.getInt("iss_count"));
+                userList.add(curUser);
+            }
+
+            select.close();
+            results.close();
+        } catch (SQLException throwables) {
+            System.out.println("getUserActivity statement failed!");
+            throwables.printStackTrace();
+        }
+
+        return userList;
     }
 }

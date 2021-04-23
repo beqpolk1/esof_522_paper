@@ -8,7 +8,8 @@ public class Main {
     public static String baseDir = "data_out\\";
 
     public static void main(String[] args) {
-       makeIssuesFile();
+       //makeIssuesFile();
+        makeAllActivityFiles();
     }
 
     private static void makeIssuesFile()
@@ -44,6 +45,41 @@ public class Main {
 
         System.out.println("Writing issues to file...");
         FileHelper.outputIssuesFile(baseDir + "orig_issues_processed.csv", issues.values());
+        System.out.println("Done");
+    }
+
+    private static void makeAllActivityFiles()
+    {
+        DBInterface database = new DBInterface();
+        database.openConnection();
+
+        System.out.print("Fetching all projects with analyzed comments...");
+        ArrayList<String> projects = database.getAnalyzedProjects();
+        System.out.println("Done");
+
+        int cnt = 0;
+        System.out.println("Found " + projects.size() + " total projects; commencing output");
+        for (String curProject : projects)
+        {
+            cnt++;
+            System.out.print(cnt + "/" + projects.size() + " ");
+            makeProjectActivityFile(curProject);
+        }
+        System.out.println("Finished outputting all files");
+    }
+
+    private static void makeProjectActivityFile(String project)
+    {
+        DBInterface database = new DBInterface();
+        database.openConnection();
+
+        System.out.print("Fetching user activities for " + project + "...");
+        ArrayList<UserActivity> userActivities = database.getUserActivity(project);
+        System.out.println("Done");
+        database.closeConnection();
+
+        System.out.print("Writing activities to file...");
+        FileHelper.outputActivityFile(baseDir + "\\user_activities\\" + project + "_activity.csv", userActivities, project);
         System.out.println("Done");
     }
 }
