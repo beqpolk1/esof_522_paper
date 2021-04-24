@@ -52,7 +52,8 @@ public class FileHelper
     {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
-            
+            writer.write("IssueID,ProjectName,Politeness,FixingTime_(hours)" + System.lineSeparator()); //header
+
             for (Issue curIssue : issues)
             {
                 String output = curIssue.getId() + "," + curIssue.getProjectName() + "," + Issue.POLITE_LEVEL[curIssue.getPoliteness()] + "," + curIssue.getFixingTime();
