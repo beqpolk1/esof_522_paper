@@ -1,3 +1,4 @@
+IssueID,ProjectName,Politeness,FixingTime_(hours)
 535110,JRuby (please use github issues at http://bugs.jruby.org),impolite,19004.7064
 535114,JRuby (please use github issues at http://bugs.jruby.org),polite,542.723
 574710,JBoss Enterprise Application Platform 4 and 5,impolite,305.7228
