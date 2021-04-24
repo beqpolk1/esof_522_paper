@@ -1,18 +1,22 @@
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 public class Main {
     public static final int LO_DEBUG = 1, MED_DEBUG = 4, HI_DEBUG = 8;
-    public static int DEBUG_LEVEL = MED_DEBUG;
+    public static int DEBUG_LEVEL = LO_DEBUG;
     public static String baseDir = "data_out\\";
 
     public static void main(String[] args) {
-        //makeIssuesFile();
+        makeIssuesFile();
+
         //makeAllActivityFiles();
-        makeAllAttractiveFiles();
+        //makeProjectActivityFile("CAMEL");
+        //makeRankedActivityFile(baseDir + "user_activities\\CAMEL_activity.csv");
+        //makeAllRankedActivityFiles();
+
+        //makeAllAttractiveFiles();
         //makeProjectAttractFile("HHH");
     }
 
@@ -83,7 +87,76 @@ public class Main {
         database.closeConnection();
 
         System.out.print("Writing activities to file...");
-        FileHelper.outputActivityFile(baseDir + "\\user_activities\\" + project + "_activity.csv", userActivities, project);
+        FileHelper.outputActivityFile(baseDir + "user_activities\\" + project + "_activity.csv", userActivities, project);
+        System.out.println("Done");
+    }
+
+    private static void makeAllRankedActivityFiles()
+    {
+        String rootPath = baseDir + "user_activities\\";
+        String[] files = FileHelper.getAllFiles(rootPath);
+        for (int i = 0; i < files.length; i++)
+        {
+            makeRankedActivityFile(rootPath + files[i]);
+        }
+    }
+
+    private static void makeRankedActivityFile(String filepath)
+    {
+        ArrayList<UserActivity> activities;
+
+        System.out.print("Importing activity file " + filepath + "...");
+        try{
+            activities = FileHelper.importActivityFile(filepath);
+        } catch (FileNotFoundException e) {
+            System.out.println("Error importing file!");
+            e.printStackTrace();
+            return;
+        }
+        System.out.println("Done");
+
+        int totalUsers = activities.size();
+        HashMap<String, String> rankings = new HashMap<>();
+        int count = 0, vCount = 0, hCount = 0, sCount = 0;
+
+        System.out.print("Computing user levels...");
+        for (UserActivity curActivity : activities)
+        {
+            count++;
+            if (DEBUG_LEVEL >= MED_DEBUG) System.out.println(count + " / " + totalUsers);
+
+            int moreActive = 0, curComments = curActivity.getCommentCnt();
+            for (UserActivity checkActivity : activities)
+            {
+                if (checkActivity.getCommentCnt() >= curComments) moreActive++;
+            }
+
+            double percentile = 100 - (100 * (double) moreActive / totalUsers);
+            String level;
+            if (percentile > 99)
+            {
+                level = "VHIGH";
+                vCount++;
+            }
+            else if (percentile > 90){
+                level = "HIGH";
+                hCount++;
+            }
+            else
+            {
+                level = "STD";
+                sCount++;
+            }
+
+            rankings.put(curActivity.getUserId(), level);
+        }
+        System.out.println("Done");
+
+        if (DEBUG_LEVEL >= LO_DEBUG) System.out.printf("%.2f%% very high, %.2f%% high, %.2f%% std" + System.lineSeparator(),
+                (100 * (double) vCount / totalUsers), (100 * (double) hCount / totalUsers), (100 * (double) sCount / totalUsers));
+
+        System.out.print("Exporting user rankings...");
+        FileHelper.outputRankedActivityFile(filepath, activities, rankings);
         System.out.println("Done");
     }
 
@@ -127,7 +200,8 @@ public class Main {
         System.out.println("Done");
 
         System.out.print("Writing attractiveness to file...");
-        FileHelper.outputAttractiveFile(baseDir + "\\attractiveness\\" + project + "_attract.csv", stats);
+        FileHelper.outputAttractiveFile(baseDir + "attractiveness\\" + project + "_attract.csv", stats);
+        FileHelper.outputAttractiveDiffFile(baseDir + "attractiveness\\diff\\" + project + "_attract_diff.csv", stats);
         System.out.println("Done");
     }
 }
