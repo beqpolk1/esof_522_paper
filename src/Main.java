@@ -1,15 +1,19 @@
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Main {
     public static final int LO_DEBUG = 1, MED_DEBUG = 4, HI_DEBUG = 8;
-    public static int DEBUG_LEVEL = LO_DEBUG;
+    public static int DEBUG_LEVEL = MED_DEBUG;
     public static String baseDir = "data_out\\";
 
     public static void main(String[] args) {
-       //makeIssuesFile();
-        makeAllActivityFiles();
+        //makeIssuesFile();
+        //makeAllActivityFiles();
+        makeAllAttractiveFiles();
+        //makeProjectAttractFile("HHH");
     }
 
     private static void makeIssuesFile()
@@ -80,6 +84,50 @@ public class Main {
 
         System.out.print("Writing activities to file...");
         FileHelper.outputActivityFile(baseDir + "\\user_activities\\" + project + "_activity.csv", userActivities, project);
+        System.out.println("Done");
+    }
+
+    private static void makeAllAttractiveFiles()
+    {
+        DBInterface database = new DBInterface();
+        database.openConnection();
+
+        System.out.print("Fetching all projects with analyzed comments...");
+        ArrayList<String> projects = database.getAnalyzedProjects();
+        System.out.println("Done");
+
+        int cnt = 0;
+        System.out.println("Found " + projects.size() + " total projects; commencing output");
+        for (String curProject : projects)
+        {
+            cnt++;
+            System.out.print(cnt + "/" + projects.size() + " ");
+            makeProjectAttractFile(curProject);
+        }
+        System.out.println("Finished outputting all files");
+    }
+
+    private static void makeProjectAttractFile(String project)
+    {
+        DBInterface database = new DBInterface();
+        database.openConnection();
+
+        System.out.print("Fetching user history for " + project + "...");
+        HashMap<String, Set<String>> userHistory = database.getUserHistory(project);
+        System.out.println("Done");
+
+        System.out.print("Fetching politeness levels for " + project + "...");
+        HashMap<String, Integer[]> politeHistory = database.getPolitenessHistory(project);
+        System.out.println("Done");
+        database.closeConnection();
+
+        System.out.print("Calculating stats for " + project + "...");
+        Attractiveness stats = new Attractiveness(project);
+        stats.buildStats(userHistory, politeHistory);
+        System.out.println("Done");
+
+        System.out.print("Writing attractiveness to file...");
+        FileHelper.outputAttractiveFile(baseDir + "\\attractiveness\\" + project + "_attract.csv", stats);
         System.out.println("Done");
     }
 }

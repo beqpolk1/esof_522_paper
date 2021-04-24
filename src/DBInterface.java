@@ -1,5 +1,8 @@
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DBInterface {
     private Connection dbConn;
@@ -129,5 +132,89 @@ public class DBInterface {
         }
 
         return userList;
+    }
+
+    public HashMap<String, Set<String>> getUserHistory(String project)
+    {
+        String query = "SELECT DISTINCT TO_CHAR(cmnt.creationdate, 'YYYY-MM') period, cmnt.author_id\n" +
+                "FROM jira_issue_comment cmnt\n" +
+                "INNER JOIN jira_issue_report rprt ON rprt.id = cmnt.issue_report_id\n" +
+                "WHERE rprt.project = ?\n" +
+                "ORDER BY period";
+        HashMap<String, Set<String>> history = new HashMap<>();
+
+        try {
+            PreparedStatement select = dbConn.prepareStatement(query);
+            select.setString(1, project);
+            ResultSet results = select.executeQuery();
+
+            while (results.next())
+            {
+                String curPeriod = results.getString("period");
+                if (!(history.containsKey(curPeriod)))
+                {
+                    history.put(curPeriod, new HashSet());
+                }
+
+                history.get(curPeriod).add(Integer.toString(results.getInt("author_id")));
+            }
+
+            select.close();
+            results.close();
+        } catch (SQLException throwables) {
+            System.out.println("getUserActivity statement failed!");
+            throwables.printStackTrace();
+        }
+
+        return history;
+    }
+
+    public HashMap<String, Integer[]> getPolitenessHistory(String project)
+    {
+        String query = "WITH tot_cmnts AS (\n" +
+                "    SELECT TO_CHAR(cmnt.creationdate, 'YYYY-MM') period, rprt.project, COUNT(*) tot_cmnt\n" +
+                "    FROM jira_issue_comment cmnt\n" +
+                "             INNER JOIN jira_issue_report rprt ON rprt.id = cmnt.issue_report_id\n" +
+                "    WHERE rprt.project = ?\n" +
+                "      AND cmnt.politeness IS NOT NULL\n AND cmnt.politeness_confidence_level > .7" +
+                "    GROUP BY TO_CHAR(cmnt.creationdate, 'YYYY-MM'), rprt.project\n" +
+                ")\n" +
+                "SELECT tot_cmnts.period, tot_cmnts.tot_cmnt,\n" +
+                "(\n" +
+                "    SELECT COUNT(*) pol_cmnt\n" +
+                "    FROM jira_issue_comment cmnt\n" +
+                "    INNER JOIN jira_issue_report rprt ON rprt.id = cmnt.issue_report_id\n" +
+                "    WHERE rprt.project = tot_cmnts.project\n" +
+                "      AND cmnt.politeness = 'POLITE' AND cmnt.politeness_confidence_level > .7\n" +
+                "    AND TO_CHAR(cmnt.creationdate, 'YYYY-MM') = tot_cmnts.period\n" +
+                ") pol_cmnt\n" +
+                "FROM tot_cmnts";
+        HashMap<String, Integer[]> history = new HashMap<>();
+
+        try {
+            PreparedStatement select = dbConn.prepareStatement(query);
+            select.setString(1, project);
+            ResultSet results = select.executeQuery();
+
+            while (results.next())
+            {
+                String curPeriod = results.getString("period");
+                if (!(history.containsKey(curPeriod)))
+                {
+                    history.put(curPeriod, new Integer[2]);
+                }
+
+                history.get(curPeriod)[0] = results.getInt("tot_cmnt");
+                history.get(curPeriod)[1] = results.getInt("pol_cmnt");
+            }
+
+            select.close();
+            results.close();
+        } catch (SQLException throwables) {
+            System.out.println("getUserActivity statement failed!");
+            throwables.printStackTrace();
+        }
+
+        return history;
     }
 }
