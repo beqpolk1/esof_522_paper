@@ -1,9 +1,6 @@
 import java.io.*;
 import java.nio.Buffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class FileHelper
 {
@@ -21,29 +18,29 @@ public class FileHelper
         while (inFile.hasNextLine() && (count < limit || limit == -1))
         {
             parseLine = parseCsvLine(inFile.nextLine());
-            if (parseLine[14].equals("POLITE")) politeness = Issue.POLITE;
-            else politeness = Issue.IMPOLITE;
 
-            if (curIssue == null || !(curId.equals(parseLine[0])))
-            {
-                curId = parseLine[0];
+            if (Double.parseDouble(parseLine[15]) > 0.7) {
+                if (parseLine[14].equals("POLITE")) politeness = Issue.POLITE;
+                else politeness = Issue.IMPOLITE;
 
-                if (issues.containsKey(curId))
-                {
-                    System.out.println("ERROR! Issue ID changed but the new issue already exists");
-                }
+                if (curIssue == null || !(curId.equals(parseLine[0]))) {
+                    curId = parseLine[0];
 
-                curIssue = new Issue(curId);
-                issues.put(curId, curIssue);
-                count++;
+                    if (issues.containsKey(curId)) {
+                        System.out.println("ERROR! Issue ID changed but the new issue already exists");
+                    }
 
-                curIssue.setPoliteness(politeness);
-                curIssue.setProjectName(parseLine[11]);
-            }
-            else {
-                if (!Issue.POLITE_LEVEL[curIssue.getPoliteness()].equals(parseLine[14].trim().toLowerCase())
-                        && !curIssue.getPoliteness().equals(Issue.MIXED)) {
-                    curIssue.setPoliteness(Issue.MIXED);
+                    curIssue = new Issue(curId);
+                    issues.put(curId, curIssue);
+                    count++;
+
+                    curIssue.setPoliteness(politeness);
+                    curIssue.setProjectName(parseLine[11]);
+                } else {
+                    if (!Issue.POLITE_LEVEL[curIssue.getPoliteness()].equals(parseLine[14].trim().toLowerCase())
+                            && !curIssue.getPoliteness().equals(Issue.MIXED)) {
+                        curIssue.setPoliteness(Issue.MIXED);
+                    }
                 }
             }
         }
@@ -79,6 +76,33 @@ public class FileHelper
             for (UserActivity curActivity : activities)
             {
                 String output = project + "," + curActivity.getUserId() + "," + curActivity.getCommentCnt() + "," + curActivity.getIssueCnt();
+                output += System.lineSeparator();
+                writer.write(output);
+            }
+
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("Failed opening/close output file!");
+            e.printStackTrace();
+        }
+    }
+
+    public static void outputAttractiveFile(String filePath, Attractiveness attractiveness)
+    {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+            writer.write("Project,Period,Magnet,Sticky,Politeness,Tot_Comment" + System.lineSeparator()); //header
+            HashMap<String, PeriodInfo> stats = attractiveness.getStats();
+            String[] allPeriods = stats.keySet().toArray(new String[0]);
+            Arrays.sort(allPeriods);
+
+            for (int i = 0; i < allPeriods.length; i++)
+            {
+                String period = allPeriods[i];
+                PeriodInfo curPeriod = stats.get(period);
+                String output = attractiveness.getProject() + "," + period + "," + curPeriod.getMagnet() + "," + curPeriod.getSticky() + ","
+                        + (curPeriod.getPoliteness() >= 0 ? curPeriod.getPoliteness() : "nan") + ","
+                        + (curPeriod.getNumComments() >= 0 ? curPeriod.getNumComments() : "nan");
                 output += System.lineSeparator();
                 writer.write(output);
             }
