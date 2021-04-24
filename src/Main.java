@@ -9,12 +9,12 @@ public class Main {
     public static String baseDir = "data_out\\";
 
     public static void main(String[] args) {
-        makeIssuesFile();
+        //makeIssuesFile();
 
-        //makeAllActivityFiles();
+        makeAllActivityFiles();
         //makeProjectActivityFile("CAMEL");
         //makeRankedActivityFile(baseDir + "user_activities\\CAMEL_activity.csv");
-        //makeAllRankedActivityFiles();
+        makeAllRankedActivityFiles();
 
         //makeAllAttractiveFiles();
         //makeProjectAttractFile("HHH");
@@ -125,10 +125,10 @@ public class Main {
             count++;
             if (DEBUG_LEVEL >= MED_DEBUG) System.out.println(count + " / " + totalUsers);
 
-            int moreActive = 0, curComments = curActivity.getCommentCnt();
+            int moreActive = 0, curComments = curActivity.getIssueCnt();
             for (UserActivity checkActivity : activities)
             {
-                if (checkActivity.getCommentCnt() >= curComments) moreActive++;
+                if (checkActivity.getIssueCnt() >= curComments) moreActive++;
             }
 
             double percentile = 100 - (100 * (double) moreActive / totalUsers);

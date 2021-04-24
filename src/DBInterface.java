@@ -108,7 +108,7 @@ public class DBInterface {
                 "INNER JOIN jira_issue_report rprt ON rprt.id = cmnt.issue_report_id\n" +
                 "WHERE rprt.project = ?\n" +
                 "GROUP BY cmnt.author_id\n" +
-                "ORDER BY comment_count DESC";
+                "ORDER BY iss_count DESC";
         ArrayList<UserActivity> userList = new ArrayList<>();
 
         try {
