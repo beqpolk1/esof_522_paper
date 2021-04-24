@@ -48,6 +48,17 @@ public class Issue {
         politeness = newPoliteness;
     }
 
+    public void setPoliteness(String newPoliteness)
+    {
+        int level = -1;
+        for (int i = 0; i < POLITE_LEVEL.length; i++)
+        {
+            if (newPoliteness.toLowerCase().equals(POLITE_LEVEL[i].toLowerCase())) level = i;
+        }
+        if (level >= 0) politeness = level;
+        else System.out.println("ERROR: had invalid politeness of " + newPoliteness);
+    }
+
     public String toString()
     {
         return getId() + " - " + getProjectName() + " - " + POLITE_LEVEL[getPoliteness()] + " - " + getFixingTime();

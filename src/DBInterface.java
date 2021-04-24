@@ -134,6 +134,42 @@ public class DBInterface {
         return userList;
     }
 
+    public String[] getIssueInfo(String issueId)
+    {
+        String query = "SELECT rprt.project, rprt.assignee_id\n" +
+                "FROM jira_issue_report rprt\n" +
+                "WHERE rprt.id = ?";
+        String[] ret = new String[2];
+
+        try {
+            PreparedStatement select = dbConn.prepareStatement(query);
+            select.setInt(1, Integer.parseInt(issueId));
+            ResultSet results = select.executeQuery();
+            int count = 0;
+
+            while(results.next())
+            {
+                count++;
+                ret[0] = results.getString("project");
+                ret[1] = Integer.toString(results.getInt("assignee_id"));
+
+                if (count > 1)
+                {
+                    throw new SQLException("getIssueInfo selected too many rows!");
+                }
+            }
+
+            if (count == 0) throw new SQLException("getIssueInfo selected no rows!");
+            select.close();
+            results.close();
+        } catch (SQLException throwables) {
+            System.out.println("getIssueInfo statement failed!");
+            throwables.printStackTrace();
+        }
+
+        return ret;
+    }
+
     public HashMap<String, Set<String>> getUserHistory(String project)
     {
         String query = "SELECT DISTINCT TO_CHAR(cmnt.creationdate, 'YYYY-MM') period, cmnt.author_id\n" +

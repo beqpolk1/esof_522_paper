@@ -126,6 +126,65 @@ public class FileHelper
         }
     }
 
+    public static void outputIssuesAllFile(String filePath)
+    {
+
+    }
+
+    public static ArrayList<Issue> importProcessedIssues(String filePath) throws FileNotFoundException
+    {
+        File file = new File(filePath);
+        Scanner inFile = new Scanner(file);
+        String[] parseLine;
+        ArrayList<Issue> issues = new ArrayList<>();
+
+        inFile.nextLine(); //skip header
+        while (inFile.hasNextLine())
+        {
+            parseLine = parseCsvLine(inFile.nextLine());
+            Issue newIssue = new Issue(parseLine[0]);
+            newIssue.setProjectName(parseLine[1]);
+            newIssue.setPoliteness(parseLine[2]);
+            newIssue.setFixingTime(Double.parseDouble(parseLine[3]));
+
+            issues.add(newIssue);
+        }
+
+        return issues;
+    }
+
+    public static HashMap<String, HashMap<String, String>> importAllRankings(String filePath) throws FileNotFoundException
+    {
+        String[] allFiles = getAllFiles(filePath);
+        HashMap<String, HashMap<String, String>> allRankings = new HashMap<>();
+
+        for (int i = 0; i < allFiles.length; i++)
+        {
+            File file = new File(filePath + allFiles[i]);
+            Scanner inFile = new Scanner(file);
+            String[] parseLine;
+            String curProj = null;
+            HashMap<String, String> authorRanks = new HashMap<>();
+
+            inFile.nextLine(); //skip header
+            while (inFile.hasNextLine())
+            {
+                parseLine = parseCsvLine(inFile.nextLine());
+
+                if (curProj == null)
+                {
+                    curProj = parseLine[0];
+                }
+
+                authorRanks.put(parseLine[1], parseLine[4]);
+            }
+
+            allRankings.put(curProj, authorRanks);
+        }
+
+        return allRankings;
+    }
+
     public static void outputAttractiveFile(String filePath, Attractiveness attractiveness)
     {
         try {

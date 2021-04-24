@@ -1,4 +1,6 @@
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -11,10 +13,13 @@ public class Main {
     public static void main(String[] args) {
         //makeIssuesFile();
 
-        makeAllActivityFiles();
         //makeProjectActivityFile("CAMEL");
         //makeRankedActivityFile(baseDir + "user_activities\\CAMEL_activity.csv");
-        makeAllRankedActivityFiles();
+
+        //makeAllActivityFiles();
+        //makeAllRankedActivityFiles();
+
+        makeIssuesAllFile();
 
         //makeAllAttractiveFiles();
         //makeProjectAttractFile("HHH");
@@ -158,6 +163,51 @@ public class Main {
         System.out.print("Exporting user rankings...");
         FileHelper.outputRankedActivityFile(filepath, activities, rankings);
         System.out.println("Done");
+    }
+
+    private static void makeIssuesAllFile()
+    {
+        ArrayList<Issue> processed;
+        HashMap<String, HashMap<String, String>> allRanks;
+
+        try {
+            System.out.print("Importing issues file...");
+            processed = FileHelper.importProcessedIssues(baseDir + "orig_issues_processed.csv");
+            System.out.println("Done");
+            System.out.print("Importing all activity rank files...");
+            allRanks = FileHelper.importAllRankings(baseDir + "user_activities\\");
+            System.out.println("Done");
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("Error importing file!");
+            e.printStackTrace();
+            return;
+        }
+
+        DBInterface database = new DBInterface();
+        database.openConnection();
+        System.out.print("Outputting cross referenced issue data...");
+        try {
+            BufferedWriter outFile = FileHelper.openOutput(baseDir + "issues_all_fields.csv");
+
+            for (Issue curIssue : processed)
+            {
+                String[] projAssignee = database.getIssueInfo(curIssue.getId());
+                String project = (projAssignee[0] == null ? "nan" : projAssignee[0]), assignee = (projAssignee[1] == null ? "nan" : projAssignee[1]);
+                String assigneeRank = allRanks.get(project).get(assignee);
+                String output = curIssue.getId() + "," + curIssue.getProjectName() + "," + Issue.POLITE_LEVEL[curIssue.getPoliteness()] + "," + curIssue.getFixingTime()
+                        + "," + assignee + "," + assigneeRank + "," + project + System.lineSeparator();
+                FileHelper.writeOutputLine(outFile, output);
+            }
+
+            FileHelper.closeOutput(outFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Done");
+
+        database.closeConnection();
     }
 
     private static void makeAllAttractiveFiles()
