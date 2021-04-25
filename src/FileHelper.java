@@ -51,7 +51,7 @@ public class FileHelper
     {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
-            writer.write("IssueID,ProjectName,Politeness,FixingTime_(hours)" + System.lineSeparator()); //header
+            writer.write("IssueID,ProjectName,Politeness,FixingTime_hours" + System.lineSeparator()); //header
 
             for (Issue curIssue : issues)
             {
@@ -124,11 +124,6 @@ public class FileHelper
             System.out.println("Failed opening/close output file!");
             e.printStackTrace();
         }
-    }
-
-    public static void outputIssuesAllFile(String filePath)
-    {
-
     }
 
     public static ArrayList<Issue> importProcessedIssues(String filePath) throws FileNotFoundException

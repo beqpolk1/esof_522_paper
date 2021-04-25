@@ -190,6 +190,7 @@ public class Main {
         System.out.print("Outputting cross referenced issue data...");
         try {
             BufferedWriter outFile = FileHelper.openOutput(baseDir + "issues_all_fields.csv");
+            FileHelper.writeOutputLine(outFile, "IssueID,ProjectName,Politeness,FixingTime_hours,Assignee,AssigneeAct,Project" + System.lineSeparator()); //header
 
             for (Issue curIssue : processed)
             {
