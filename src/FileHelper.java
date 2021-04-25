@@ -18,30 +18,29 @@ public class FileHelper
         {
             parseLine = parseCsvLine(inFile.nextLine());
 
-            if (Double.parseDouble(parseLine[15]) > 0.7) {
-                if (parseLine[14].equals("POLITE")) politeness = Issue.POLITE;
-                else politeness = Issue.IMPOLITE;
+            if (parseLine[14].equals("POLITE")) politeness = Issue.POLITE;
+            else politeness = Issue.IMPOLITE;
 
-                if (curIssue == null || !(curId.equals(parseLine[0]))) {
-                    curId = parseLine[0];
+            if (curIssue == null || !(curId.equals(parseLine[0]))) {
+                curId = parseLine[0];
 
-                    if (issues.containsKey(curId)) {
-                        System.out.println("ERROR! Issue ID changed but the new issue already exists");
-                    }
+                if (issues.containsKey(curId)) {
+                    System.out.println("ERROR! Issue ID changed but the new issue already exists");
+                }
 
-                    curIssue = new Issue(curId);
-                    issues.put(curId, curIssue);
-                    count++;
+                curIssue = new Issue(curId);
+                issues.put(curId, curIssue);
+                count++;
 
-                    curIssue.setPoliteness(politeness);
-                    curIssue.setProjectName(parseLine[11]);
-                } else {
-                    if (!Issue.POLITE_LEVEL[curIssue.getPoliteness()].equals(parseLine[14].trim().toLowerCase())
-                            && !curIssue.getPoliteness().equals(Issue.MIXED)) {
-                        curIssue.setPoliteness(Issue.MIXED);
-                    }
+                curIssue.setPoliteness(politeness);
+                curIssue.setProjectName(parseLine[11]);
+            } else {
+                if (!Issue.POLITE_LEVEL[curIssue.getPoliteness()].equals(parseLine[14].trim().toLowerCase())
+                        && !curIssue.getPoliteness().equals(Issue.MIXED)) {
+                    curIssue.setPoliteness(Issue.MIXED);
                 }
             }
+
         }
 
         return issues;

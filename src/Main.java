@@ -11,7 +11,7 @@ public class Main {
     public static String baseDir = "data_out\\";
 
     public static void main(String[] args) {
-        //makeIssuesFile();
+        makeIssuesFile();
 
         //makeProjectActivityFile("CAMEL");
         //makeRankedActivityFile(baseDir + "user_activities\\CAMEL_activity.csv");
